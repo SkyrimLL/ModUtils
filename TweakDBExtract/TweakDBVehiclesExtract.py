@@ -8,11 +8,11 @@ from tqdm import tqdm
 SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = SCRIPT_DIR / "data"
 INPUT_FILE = DATA_DIR / "tweakdb.txt"
-OUTPUT_FILE = DATA_DIR / "tweakdb-vehicles.txt"
+OUTPUT_FILE = DATA_DIR / "tweakdb-Vehicles.txt"
 MISSING_CARS_OUTPUT_FILE = DATA_DIR / "missingcars_tweakxl.txt"
 VEHICLES_TO_DELETE_OUTPUT_FILE = DATA_DIR / "missingcars_tweakxl_to_delete.txt"
 CLAIM_VEHICLES_TWEAKS_DIR = Path(r"F:\_VORTEX_MODS\cyberpunk2077\ClaimVehicles\r6\tweaks\ClaimVehicles")
-NAME_INCLUDE_PATTERNS: list[str] = [
+NAME_EXCLUDE_PATTERNS: list[str] = [
 	"_offer", 
 	"_inline*", 
 	"_crashed",
@@ -251,7 +251,7 @@ def main() -> None:
 		raise FileNotFoundError(f"Input file not found: {INPUT_FILE}")
 
 	vehicles_df = extract_vehicle_lines(INPUT_FILE)
-	vehicles_df = filter_vehicle_names(vehicles_df, NAME_INCLUDE_PATTERNS)
+	vehicles_df = filter_vehicle_names(vehicles_df, NAME_EXCLUDE_PATTERNS)
 	save_vehicle_lines(vehicles_df, OUTPUT_FILE)
 
 	missing_count, yaml_unique_count = export_missing_vehicles_from_claimvehicles_yaml(
