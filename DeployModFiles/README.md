@@ -22,12 +22,12 @@ This is useful for keeping release-ready folders and source-control folders in s
 - Python packages:
   - `PyYAML`
   - `colorama`
-  - `py7zr`
+- [7-Zip](https://www.7-zip.org/) (`7z.exe`) for creating archives. The script finds it via the `SEVENZIP_PATH` environment variable, then your `PATH`, then the standard install locations (`C:\Program Files\7-Zip\7z.exe`).
 
 Install dependencies:
 
 ```powershell
-pip install pyyaml colorama py7zr
+pip install pyyaml colorama
 ```
 
 ## How It Works

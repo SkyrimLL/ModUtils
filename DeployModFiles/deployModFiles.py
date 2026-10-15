@@ -38,6 +38,8 @@ import os
 import os.path
 from pathlib import Path
 import shutil
+import subprocess
+import tempfile
 
 import glob
 import fnmatch
@@ -47,7 +49,6 @@ import yaml
 from colorama import init as colorama_init
 from colorama import Fore
 from colorama import Style
-import py7zr
 from datetime import datetime
 from datetime import date
 
@@ -64,6 +65,32 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 
 # Build the absolute path to the config file relative to the script location
 CONFIG_PATH = SCRIPT_DIR / "data" / "config.yaml"
+
+# Compression level for native 7z.exe (0=store .. 9=ultra)
+SEVENZIP_LEVEL = 5
+
+
+def find_sevenzip():
+    # Prefer an explicit override, then PATH, then the standard install locations.
+    override = os.environ.get("SEVENZIP_PATH")
+    if override and os.path.isfile(override):
+        return override
+
+    found = shutil.which("7z") or shutil.which("7za")
+    if found:
+        return found
+
+    for candidate in (
+        r"C:\Program Files\7-Zip\7z.exe",
+        r"C:\Program Files (x86)\7-Zip\7z.exe",
+    ):
+        if os.path.isfile(candidate):
+            return candidate
+
+    return None
+
+
+SEVENZIP_EXE = find_sevenzip()
 
 # -- END CONFIGURATION ---
 
@@ -174,14 +201,8 @@ def deploy_mods(mods_data, mod_group_name, mod_name):
                                 and not any(part == '.vscode' for part in os.path.normpath(f).split(os.sep))
                             ]
 
-                            # 3. Create the 7z archive and write the filtered files
-                            with py7zr.SevenZipFile(archive_file, 'w') as archive:
-                                for file_path in filtered_files:
-                                    # The second argument to write() sets the name within the archive (optional)
-                                    archive.write(file_path, arcname=os.path.relpath(file_path, source_dir))                            
-
-                            # with py7zr.SevenZipFile(archive_file, 'w') as archive:
-                            #     archive.writeall(this_mod['archive_folder'],"")
+                            # 3. Create the 7z archive from the filtered files using native 7z.exe
+                            create_7z_archive(archive_file, source_dir, filtered_files)
 
                 elif (this_mod['mode']=="skip"):
                     print(f"{Fore.YELLOW}========= " + this_mod_group['name'] + " - " + this_mod['name'] + f" -- SKIPPED {Style.RESET_ALL}")
@@ -285,6 +306,51 @@ def do_copy(inputdir, outputdir, pattern, mode):
             print("     " + str(filecount) + " files" )
 
     return totalfilecount
+
+
+def create_7z_archive(archive_file, source_dir, file_list):
+    if SEVENZIP_EXE is None:
+        raise Exception(
+            ">>> 7z.exe not found. Set the SEVENZIP_PATH environment variable or install 7-Zip."
+        )
+
+    if not file_list:
+        print(f"{Fore.YELLOW}      Nothing to archive (no files passed filters){Style.RESET_ALL}")
+        return
+
+    # Remove any existing archive so 7z creates a fresh one instead of updating.
+    if os.path.exists(archive_file):
+        os.remove(archive_file)
+
+    # Store paths relative to source_dir so the archive layout matches the mod folder.
+    rel_paths = [os.path.relpath(f, source_dir) for f in file_list]
+
+    listfile = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".txt", encoding="utf-8", delete=False
+        ) as lf:
+            lf.write("\n".join(rel_paths))
+            listfile = lf.name
+
+        cmd = [
+            SEVENZIP_EXE,
+            "a",              # add to archive
+            "-t7z",           # 7z format
+            f"-mx={SEVENZIP_LEVEL}",  # compression level
+            "-mmt=on",        # multithreaded
+            "-scsUTF-8",      # list file is UTF-8
+            "-bso0", "-bsp0", # silence normal/progress output
+            archive_file,
+            f"@{listfile}",
+        ]
+
+        result = subprocess.run(cmd, cwd=source_dir)
+        if result.returncode != 0:
+            raise Exception(f">>> 7z.exe failed (exit code {result.returncode}) for: {archive_file}")
+    finally:
+        if listfile and os.path.exists(listfile):
+            os.remove(listfile)
 
 
 def join(*args):
