@@ -35,7 +35,7 @@ from PIL import Image
 
 DEFAULT_DATA_DIR = Path(r"F:\Steam\steamapps\common\Skyrim Special Edition\Data")
 DEFAULT_PLUGINS_TXT = Path(
-    r"C:\Users\lalqu\AppData\Local\Skyrim Special Edition\plugins.txt"
+    r"F:\_VORTEX_MODS\_backups\plugins.txt"
 )
 DEFAULT_MODLIST_TXT = Path(r"F:\_VORTEX_MODS\_backups\modlist.txt")
 DEFAULT_MUGSHOT_DIR = Path(r"F:\_VORTEX_MODS\_backups\NPCMugshots")
