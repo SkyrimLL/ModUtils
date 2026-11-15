@@ -140,16 +140,22 @@ def deploy_mods(mods_data, mod_group_name, mod_name):
                     source_folder = this_mod["source_folder"]
                     release_folder = this_mod["release_folder"]
                     github_folder = this_mod["github_folder"]
+                    vortex_staging_folder = this_mod.get("vortex_staging_folder", "")
                     mod_assets = this_mod["assets"] 
                     mode = this_mod["mode"]
 
                     print("Source: " + source_folder)
                     # print(release_folder)
                     # print(github_folder)
+                    # print(vortex_staging_folder)
                     # print(mod_assets)
                     # print(mode)
 
-                    filesfound = deploy_files([source_folder], [release_folder, github_folder], mod_assets, mode)
+                    destination_folders = [release_folder, github_folder]
+                    if vortex_staging_folder:
+                        destination_folders.append(vortex_staging_folder)
+
+                    filesfound = deploy_files([source_folder], destination_folders, mod_assets, mode)
                     # print("Files found: " + str(filesfound))
 
                     if ('archive_target' in this_mod):

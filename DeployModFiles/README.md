@@ -5,9 +5,10 @@
 It reads one YAML config file that points to one or more JSON manifests, then:
 
 - Copies matching files from each mod `source_folder`.
-- Deploys files to up to two destinations per mod:
+- Deploys files to up to three destinations per mod:
   - `release_folder`
   - `github_folder`
+  - `vortex_staging_folder` (optional)
 - Optionally creates dated `.7z` archives from an `archive_folder`.
 
 This is useful for keeping release-ready folders and source-control folders in sync from your active mod workspace.
@@ -93,6 +94,7 @@ Minimal structure:
           "source_folder": "F:\\Source\\MyMod",
           "release_folder": "G:\\Release\\MyMod",
           "github_folder": "G:\\Github\\MyMod",
+          "vortex_staging_folder": "F:\\_VORTEX_MODS\\MyMod",
           "mode": "update",
           "assets": [
             {
@@ -113,6 +115,7 @@ Field notes:
 - `assets[].path`: subfolder under `source_folder` and destination folders.
 - `assets[].file_patterns`: wildcard patterns (`*.reds`, `*.yaml`, etc.).
 - `release_folder` or `github_folder` can be empty strings to skip that target.
+- `vortex_staging_folder`: optional. When set to a non-empty path, a duplicate copy is deployed there (e.g., a Vortex staging mod folder) in parallel to `release_folder` and `github_folder`. Omit it or leave it empty to skip.
 
 ## Copy Behavior
 
